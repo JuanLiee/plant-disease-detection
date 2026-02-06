@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaf Disease AI</title>
+    <style>
+        /* ================= STYLING UTAMA ================= */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* BACKGROUND SHAPES */
+        body::before,
+        body::after {
+            content: "";
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(76,175,80,0.4), transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        body::before { top: -100px; left: -100px; }
+        body::after { bottom: -120px; right: -120px; background: radial-gradient(circle, rgba(33,150,243,0.4), transparent 70%); }
+
+        .card {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 18px;
+            padding: 30px;
+            max-width: 720px;
+            width: 100%;
+            color: #fff;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 { margin-top: 0; font-size: 28px; text-align: center; letter-spacing: 0.5px; }
+
+        form { margin-top: 20px; text-align: center; }
+
+        input[type="file"] {
+            background: rgba(255,255,255,0.15);
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            color: white;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        button {
+            margin-top: 15px;
+            background: linear-gradient(135deg, #4CAF50, #2d7ff9);
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+        }
+
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        img {
+            max-width: 100%;
+            border-radius: 12px;
+            margin-top: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .ai {
+            background: rgba(255,255,255,0.15);
+            padding: 18px;
+            border-radius: 12px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .warning {
+            margin-top: 15px;
+            color: #FFC107;
+            font-weight: bold;
+        }
+
+        /* ================= LOADING ================= */
+        .loading { display: none; text-align: center; margin-top: 25px; }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 6px solid rgba(255,255,255,0.3);
+            border-top: 6px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ================= TREATMENT LINK ================= */
+        .treatment ul { padding-left: 20px; }
+        .treatment li a { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🌿 Leaf Disease Detector</h2>
+
+    <form method="POST" enctype="multipart/form-data" onsubmit="showLoading()">
+        <input type="file" name="image" required>
+        <br><br>
+        <button id="btn" type="submit">Analyze Leaf Now</button>
+    </form>
+
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>AI is analyzing your leaf...</p>
+    </div>
+
+    {% if image_url %}
+        <img src="{{ image_url }}">
+    {% endif %}
+
+    {% if result %}
+        <div class="result">
+            <h3>Prediction:</h3>
+            <ol>
+            {% for d, c in result %}
+                <li>{{ d }} ({{ c }}%)</li>
+            {% endfor %}
+            </ol>
+        </div>
+    {% endif %}
+
+    {% if explanation %}
+        <div class="ai">
+            <b>💡 AI Explanation:</b><br>
+            {{ explanation }}
+        </div>
+    {% endif %}
+
+    {% if warning %}
+        <div class="warning">{{ warning }}</div>
+    {% endif %}
+
+    {% if treatment %}
+        <div class="ai treatment" style="border-left-color: #FF9800;">
+            <b>💊 Recommended Treatments:</b><br><br>
+
+            {% if treatment.chemical %}
+                <b>Chemical Solutions:</b>
+                <ul>
+                    {% for item in treatment.chemical %}
+                        <li>
+                            <a href="{{ item.link }}" target="_blank" style="color: #FFEB3B;">
+                                {{ item.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if treatment.organic %}
+                <b>Organic Solutions:</b>
+                <ul>
+                    {% for item in treatment.organic %}
+                        <li>
+                            <a href="{{ item.link }}" target="_blank" style="color: #4CAF50;">
+                                {{ item.name }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% if treatment.prevention %}
+                <b>Prevention Tips:</b>
+                <ul>
+                    {% for tip in treatment.prevention %}
+                        <li>{{ tip }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    {% endif %}
+
+</div>
+
+<script>
+function showLoading() {
+    document.getElementById("loading").style.display = "block";
+    document.getElementById("btn").disabled = true;
+    document.getElementById("btn").innerText = "Analyzing...";
+}
+</script>
+
+</body>
+</html>
